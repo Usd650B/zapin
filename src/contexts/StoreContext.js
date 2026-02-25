@@ -10,7 +10,8 @@ import {
   query,
   where,
   setDoc,
-  serverTimestamp
+  serverTimestamp,
+  getDocs
 } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useAuth } from './AuthContext';
