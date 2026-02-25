@@ -91,6 +91,17 @@ export default function Navigation() {
           </Link>
         )}
 
+        {/* Admin Link - Direct access */}
+        {currentUser && (
+          <Link
+            to="/admin"
+            className={`flex flex-col items-center justify-center w-full transition-all ${location.pathname.startsWith('/admin') ? 'text-primary' : 'text-gray-400'}`}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="text-[10px] font-bold mt-1 uppercase">Admin</span>
+          </Link>
+        )}
+
         {/* Profile/Dashboard Link */}
         <button
           onClick={async (e) => {
@@ -100,20 +111,18 @@ export default function Navigation() {
               const udoc = await getDoc(doc(db, 'users', currentUser.uid));
               const role = udoc.exists() ? (udoc.data().type || userType) : userType;
               if (role === 'seller') return navigate('/seller-dashboard');
-              if (role === 'admin') return navigate('/admin');
               return navigate('/buyer-dashboard');
             } catch (err) {
               console.error('Error fetching user role, falling back to context:', err);
               if (userType === 'seller') return navigate('/seller-dashboard');
-              if (userType === 'admin') return navigate('/admin');
               return navigate('/buyer-dashboard');
             }
           }}
           className={`flex flex-col items-center justify-center w-full transition-all ${location.pathname.includes('dashboard') || location.pathname === '/login' || location.pathname.startsWith('/admin') ? 'text-primary' : 'text-gray-400'}`}
         >
-          <LayoutDashboard className="w-5 h-5" />
+          <User className="w-5 h-5" />
           <span className="text-[10px] font-bold mt-1 uppercase">
-            {currentUser ? (userType === 'admin' ? 'Admin' : 'Account') : 'Login'}
+            {currentUser ? 'Account' : 'Login'}
           </span>
         </button>
       </div>
