@@ -11,6 +11,7 @@ import SellerDashboard from './pages/SellerDashboard';
 import BuyerDashboard from './pages/BuyerDashboard';
 import BuyerOrders from './pages/BuyerOrders';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
 import AdminRoute from './components/AdminRoute';
 import AdminLink from './components/AdminLink';
 import CreateStore from './pages/CreateStore';
@@ -66,7 +67,8 @@ function App() {
         <Router>
           <Routes>
             {/* Admin Route - Completely Separate */}
-            <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
             
             {/* All other routes - Mobile Layout */}
             <Route path="/*" element={

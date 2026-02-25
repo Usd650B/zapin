@@ -36,18 +36,28 @@ export default function AdminDashboard() {
   console.log('AdminDashboard component loaded. Current user:', currentUser?.email);
   console.log('Current path:', window.location.pathname);
 
-  // Admin authentication check - simplified for development
+  // Admin authentication check with hardcoded credentials
   useEffect(() => {
     console.log('Admin auth check running...');
-    if (!currentUser) {
-      console.log('No current user, redirecting to login');
-      navigate('/login');
+    
+    // Check if user is authenticated via admin credentials
+    const adminCredentials = sessionStorage.getItem('adminCredentials');
+    if (!adminCredentials) {
+      console.log('No admin credentials, redirecting to admin login');
+      navigate('/admin-login');
       return;
     }
     
-    console.log('User authenticated, allowing admin access for any logged-in user');
-    // For development - allow any logged-in user to access admin
-    // In production, you would check for admin role here
+    // Verify admin credentials
+    const { username, password } = JSON.parse(adminCredentials);
+    if (username === 'Zapin1978' && password === 'Zapin1978') {
+      console.log('Admin credentials verified, allowing access');
+    } else {
+      console.log('Invalid admin credentials, redirecting to admin login');
+      sessionStorage.removeItem('adminCredentials');
+      navigate('/admin-login');
+      return;
+    }
   }, [currentUser, navigate]);
 
   const sidebarItems = [
@@ -63,7 +73,10 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to log out?')) {
-      logout();
+      // Clear admin credentials
+      sessionStorage.removeItem('adminCredentials');
+      // Navigate to admin login
+      navigate('/admin-login');
     }
   };
 
