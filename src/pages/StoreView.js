@@ -268,10 +268,15 @@ export default function StoreView() {
             {/* Modern 2-column grid */}
             <div className="grid grid-cols-2 gap-3">
               {storeProducts.map(product => {
-                const inStock = product.stock === undefined || product.stock > 0;
-                const lowStock = product.stock !== undefined && product.stock > 0 && product.stock < 5;
+                // Convert stock to number to handle string values from Firestore
+                const stockNumber = Number(product.stock) || 0;
+                const inStock = product.stock === undefined || stockNumber > 0;
+                const lowStock = product.stock !== undefined && stockNumber > 0 && stockNumber < 5;
                 const isAdded = addedToCart[product.id];
                 const isWished = wishlist[product.id];
+
+                // Debug: Log product stock info
+                console.log(`Product: ${product.name}, Stock: ${product.stock} (${typeof product.stock}), Stock Number: ${stockNumber}, In Stock: ${inStock}`);
 
                 return (
                   <div
