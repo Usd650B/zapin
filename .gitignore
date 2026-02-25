@@ -26,3 +26,5 @@ firebase-debug.log*
 
 # Git lock
 *.lock
+.vercel
+.env*.local

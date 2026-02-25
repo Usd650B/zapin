@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   console.log('AdminDashboard component loaded. Current user:', currentUser?.email);
   console.log('Current path:', window.location.pathname);
 
-  // Admin authentication check
+  // Admin authentication check - simplified for development
   useEffect(() => {
     console.log('Admin auth check running...');
     if (!currentUser) {
@@ -44,20 +44,11 @@ export default function AdminDashboard() {
       navigate('/login');
       return;
     }
-
-    // If authenticated but not an admin, redirect to appropriate dashboard
-    if (userType && userType !== 'admin') {
-      console.log(`User is not admin (type=${userType}), redirecting away from admin`);
-      if (userType === 'seller') {
-        navigate('/seller-dashboard');
-      } else {
-        navigate('/buyer-dashboard');
-      }
-      return;
-    }
-
-    console.log('User authenticated as admin, allowing admin access');
-  }, [currentUser, userType, navigate]);
+    
+    console.log('User authenticated, allowing admin access for any logged-in user');
+    // For development - allow any logged-in user to access admin
+    // In production, you would check for admin role here
+  }, [currentUser, navigate]);
 
   const sidebarItems = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },

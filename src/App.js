@@ -12,6 +12,7 @@ import BuyerDashboard from './pages/BuyerDashboard';
 import BuyerOrders from './pages/BuyerOrders';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminRoute from './components/AdminRoute';
+import AdminLink from './components/AdminLink';
 import CreateStore from './pages/CreateStore';
 import StoreView from './pages/StoreView';
 import ProductManagement from './pages/ProductManagement';
@@ -70,6 +71,7 @@ function App() {
             {/* All other routes - Mobile Layout */}
             <Route path="/*" element={
               <div className={`mobile-container ${showSplash ? 'hidden' : ''}`}>
+                <AdminLink />
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
