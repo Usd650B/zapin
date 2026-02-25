@@ -1,0 +1,218 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { db, storage } from '../firebase';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
+  where,
+  setDoc,
+  serverTimestamp
+} from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { useAuth } from './AuthContext';
+
+const StoreContext = createContext();
+
+export function useStore() {
+  return useContext(StoreContext);
+}
+
+export function StoreProvider({ children }) {
+  const [stores, setStores] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
+
+  // 1. Sync Stores from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'stores'), (snapshot) => {
+      const storeList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setStores(storeList);
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  // 2. Sync Products from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'products'), (snapshot) => {
+      const productList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setProducts(productList);
+    });
+    return unsub;
+  }, []);
+
+  // 3. Sync Orders (for buyers and sellers)
+  useEffect(() => {
+    if (!currentUser) {
+      setOrders([]);
+      return;
+    }
+
+    // For simplicity in this version, we'll sync all orders and filter in the components
+    // This ensures both buyers see their purchases and sellers see their sales
+    const unsub = onSnapshot(collection(db, 'orders'), (snapshot) => {
+      const orderList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setOrders(orderList);
+    });
+
+    return unsub;
+  }, [currentUser]);
+
+  // 4. Cart still lives in state (ephemeral)
+
+  // Helper: Upload Base64 to Firebase Storage and get URL
+  const uploadToStorage = async (base64Path, folder) => {
+    if (!base64Path || !base64Path.startsWith('data:')) return base64Path;
+    const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const storageRef = ref(storage, `${folder}/${filename}`);
+    await uploadString(storageRef, base64Path, 'data_url');
+    return await getDownloadURL(storageRef);
+  };
+
+  const addStore = async (store) => {
+    if (!currentUser) return;
+
+    // Upload logo if it's base64
+    const logoUrl = await uploadToStorage(store.logo, 'logos');
+
+    const storeData = {
+      ...store,
+      ownerId: currentUser.uid,
+      logo: logoUrl || null,
+      primaryColor: store.primaryColor || '#3b82f6',
+      secondaryColor: store.secondaryColor || '#10b981',
+      layout: store.layout || 'grid',
+      createdAt: serverTimestamp()
+    };
+
+    await addDoc(collection(db, 'stores'), storeData);
+  };
+
+  const updateStore = async (storeId, updates) => {
+    if (updates.logo && updates.logo.startsWith('data:')) {
+      updates.logo = await uploadToStorage(updates.logo, 'logos');
+    }
+    await updateDoc(doc(db, 'stores', storeId), updates);
+  };
+
+  const addProduct = async (product) => {
+    // Upload images if they are base64
+    const imageUrls = await Promise.all(
+      (product.images || []).map(img => uploadToStorage(img, 'products'))
+    );
+
+    // Upload video if it's base64
+    const videoUrl = await uploadToStorage(product.video, 'videos');
+
+    const productData = {
+      ...product,
+      images: imageUrls,
+      video: videoUrl || null,
+      createdAt: serverTimestamp()
+    };
+
+    await addDoc(collection(db, 'products'), productData);
+  };
+
+  const updateProduct = async (productId, updates) => {
+    if (updates.images) {
+      updates.images = await Promise.all(
+        updates.images.map(img => uploadToStorage(img, 'products'))
+      );
+    }
+    if (updates.video && updates.video.startsWith('data:')) {
+      updates.video = await uploadToStorage(updates.video, 'videos');
+    }
+    await updateDoc(doc(db, 'products', productId), updates);
+  };
+
+  const deleteProduct = async (productId) => {
+    await deleteDoc(doc(db, 'products', productId));
+  };
+
+  const deleteStore = async (storeId) => {
+    // Delete all products associated with this store first
+    const storeProducts = products.filter(p => p.storeId === storeId);
+    await Promise.all(storeProducts.map(p => deleteDoc(doc(db, 'products', p.id))));
+    // Then delete the store
+    await deleteDoc(doc(db, 'stores', storeId));
+  };
+
+  const deleteOrder = async (orderId) => {
+    await deleteDoc(doc(db, 'orders', orderId));
+  };
+
+  const addToCart = (product) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const removeFromCart = (productId) => {
+    setCart(prev => prev.filter(item => item.id !== productId));
+  };
+
+  const placeOrder = async (order) => {
+    const orderData = {
+      ...order,
+      status: 'pending',
+      createdAt: serverTimestamp()
+    };
+    const docRef = await addDoc(collection(db, 'orders'), orderData);
+    setCart([]);
+    return { id: docRef.id, ...orderData };
+  };
+
+  const updateOrder = async (orderId, updates) => {
+    await updateDoc(doc(db, 'orders', orderId), updates);
+  };
+
+  const formatPrice = (amount) => {
+    return new Intl.NumberFormat('en-TZ', {
+      style: 'currency',
+      currency: 'TZS',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const value = {
+    stores,
+    products,
+    orders,
+    cart,
+    loading,
+    addStore,
+    updateStore,
+    deleteStore,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    addToCart,
+    removeFromCart,
+    placeOrder,
+    updateOrder,
+    deleteOrder,
+    formatPrice
+  };
+
+  return (
+    <StoreContext.Provider value={value}>
+      {children}
+    </StoreContext.Provider>
+  );
+}
