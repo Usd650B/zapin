@@ -25,11 +25,21 @@ export function StoreProvider({ children }) {
   const [stores, setStores] = useState([]);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [users, setUsers] = useState([]);
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
 
-  // 1. Sync Stores from Firestore
+  // 1. Sync Users from Firestore (for admin dashboard)
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const userList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setUsers(userList);
+    });
+    return unsub;
+  }, []);
+
+  // 2. Sync Stores from Firestore
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'stores'), (snapshot) => {
       const storeList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -39,7 +49,7 @@ export function StoreProvider({ children }) {
     return unsub;
   }, []);
 
-  // 2. Sync Products from Firestore
+  // 3. Sync Products from Firestore
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'products'), (snapshot) => {
       const productList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -48,14 +58,14 @@ export function StoreProvider({ children }) {
     return unsub;
   }, []);
 
-  // 3. Sync Orders (for buyers and sellers)
+  // 4. Sync Orders (for buyers and sellers)
   useEffect(() => {
     if (!currentUser) {
       setOrders([]);
       return;
     }
 
-    // For simplicity in this version, we'll sync all orders and filter in the components
+    // For simplicity in this version, we'll sync all orders and filter in components
     // This ensures both buyers see their purchases and sellers see their sales
     const unsub = onSnapshot(collection(db, 'orders'), (snapshot) => {
       const orderList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -65,7 +75,7 @@ export function StoreProvider({ children }) {
     return unsub;
   }, [currentUser]);
 
-  // 4. Cart still lives in state (ephemeral)
+  // 5. Cart still lives in state (ephemeral)
 
   // Helper: Upload Base64 to Firebase Storage and get URL
   const uploadToStorage = async (base64Path, folder) => {
@@ -194,6 +204,7 @@ export function StoreProvider({ children }) {
     stores,
     products,
     orders,
+    users,
     cart,
     loading,
     addStore,

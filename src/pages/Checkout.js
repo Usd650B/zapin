@@ -16,6 +16,13 @@ export default function Checkout() {
     }
   }, [currentUser, userType, navigate]);
 
+  // Redirect unauthenticated users to login
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/login');
+    }
+  }, [currentUser, navigate]);
+
   const [quantities, setQuantities] = useState({});
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
@@ -24,6 +31,18 @@ export default function Checkout() {
     address: ''
   });
   const [loading, setLoading] = useState(false);
+
+  // Pre-fill customer info with user data when available
+  useEffect(() => {
+    if (currentUser) {
+      setCustomerInfo(prev => ({
+        ...prev,
+        name: prev.name || currentUser.displayName || '',
+        email: prev.email || currentUser.email || '',
+        phone: prev.phone || currentUser.phoneNumber || ''
+      }));
+    }
+  }, [currentUser]);
 
   // Group cart items by store
   const cartByStore = cart.reduce((acc, item) => {
@@ -64,6 +83,11 @@ export default function Checkout() {
       return alert('Please fill in all customer information');
     }
 
+    // Ensure user is authenticated
+    if (!currentUser || !currentUser.uid) {
+      return alert('Please login to place an order');
+    }
+
     setLoading(true);
 
     try {
@@ -72,16 +96,17 @@ export default function Checkout() {
         const orderData = {
           storeId,
           storeName: store?.name || 'Unknown Store',
-          customerId: currentUser?.uid,
+          customerId: currentUser.uid, // Remove optional chaining since we validated above
           customerName: customerInfo.name,
-          customerEmail: customerInfo.email,
+          customerEmail: customerInfo.email || currentUser.email || '',
           customerPhone: customerInfo.phone,
           customerAddress: customerInfo.address,
           items: items.map(item => ({
             id: item.id,
             name: item.name,
             price: item.price,
-            quantity: quantities[item.id] || item.quantity || 1
+            quantity: quantities[item.id] || item.quantity || 1,
+            image: item.image || item.images?.[0] || null
           })),
           total: getStoreTotal(items)
         };

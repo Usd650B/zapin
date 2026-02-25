@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useStore } from '../contexts/StoreContext';
@@ -19,10 +19,17 @@ import {
 } from 'lucide-react';
 
 export default function Orders() {
-    const { currentUser } = useAuth();
+    const { currentUser, userType } = useAuth();
     const { stores, orders, updateOrder, deleteOrder, formatPrice } = useStore();
     const navigate = useNavigate();
     const [expandedOrder, setExpandedOrder] = useState(null);
+
+    // Redirect buyers away from seller orders page
+    useEffect(() => {
+        if (currentUser && userType === 'buyer') {
+            navigate('/buyer-dashboard');
+        }
+    }, [currentUser, userType, navigate]);
 
     const myStores = stores.filter(store => store.ownerId === currentUser?.uid);
     const myOrders = orders.filter(order => myStores.some(store => store.id === order.storeId));
@@ -161,13 +168,34 @@ export default function Orders() {
                                     {/* Items List */}
                                     <div className="bg-white rounded-xl border border-gray-100 p-3 mb-4">
                                         <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Order Items</h4>
-                                        <div className="space-y-2">
+                                        <div className="space-y-3">
                                             {order.items?.map((item, idx) => (
-                                                <div key={idx} className="flex justify-between items-center text-sm">
-                                                    <div className="flex-1 min-w-0 pr-4">
-                                                        <p className="text-gray-900 font-medium truncate">{item.name}</p>
-                                                        <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                                                <div key={idx} className="flex items-center space-x-3 text-sm">
+                                                    {/* Product Photo */}
+                                                    <div className="w-12 h-12 rounded-lg bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
+                                                        {item.image ? (
+                                                            <img 
+                                                                src={item.image} 
+                                                                alt={item.name}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjlGQUZCIi8+CjxwYXRoIGQ9Ik0yNCAzMkMxOS41ODIgMzIgMTYgMjguNDE4IDE2IDI0QzE2IDE5LjU4MiAxOS41ODIgMTYgMjQgMTZDMjguNDE4IDE2IDMyIDE5LjU4MiAzMiAyNEMzMiAyOC40MTggMjguNDE4IDMyIDI0IDMyWiIgZmlsbD0iI0U1RTdFQiIvPgo8L3N2Zz4K';
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center">
+                                                                <Package className="w-6 h-6 text-gray-300" />
+                                                            </div>
+                                                        )}
                                                     </div>
+                                                    
+                                                    {/* Product Details */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-gray-900 font-medium truncate">{item.name}</p>
+                                                        <p className="text-xs text-gray-500">Qty: {item.quantity} × {formatPrice(item.price)}</p>
+                                                    </div>
+                                                    
+                                                    {/* Price */}
                                                     <p className="font-semibold text-gray-900">{formatPrice(item.price * item.quantity)}</p>
                                                 </div>
                                             ))}

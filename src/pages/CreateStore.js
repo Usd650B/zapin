@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useStore } from '../contexts/StoreContext';
@@ -14,9 +14,16 @@ export default function CreateStore() {
   const [logo, setLogo] = useState(null);
   const [loading, setLoading] = useState(false);
   
-  const { currentUser } = useAuth();
+  const { currentUser, userType } = useAuth();
   const { addStore } = useStore();
   const navigate = useNavigate();
+
+  // Redirect buyers away from store creation
+  useEffect(() => {
+    if (currentUser && userType === 'buyer') {
+      navigate('/explore');
+    }
+  }, [currentUser, userType, navigate]);
 
   const categories = [
     'Electronics',
