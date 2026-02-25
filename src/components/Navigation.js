@@ -91,17 +91,6 @@ export default function Navigation() {
           </Link>
         )}
 
-        {/* Admin Link - Direct access */}
-        {currentUser && (
-          <Link
-            to="/admin"
-            className={`flex flex-col items-center justify-center w-full transition-all ${location.pathname.startsWith('/admin') ? 'text-primary' : 'text-gray-400'}`}
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            <span className="text-[10px] font-bold mt-1 uppercase">Admin</span>
-          </Link>
-        )}
-
         {/* Profile/Dashboard Link */}
         <button
           onClick={async (e) => {
