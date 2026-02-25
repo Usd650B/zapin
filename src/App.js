@@ -13,6 +13,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import CreateStore from './pages/CreateStore';
 import StoreView from './pages/StoreView';
+import EditStore from './pages/EditStore';
 import ProductManagement from './pages/ProductManagement';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
@@ -40,6 +41,7 @@ function App() {
                   <Route path="/buyer-orders" element={<BuyerOrders />} />
                   <Route path="/create-store" element={<CreateStore />} />
                   <Route path="/store/:storeId" element={<StoreView />} />
+                  <Route path="/store/:storeId/edit" element={<EditStore />} />
                   <Route path="/manage-products" element={<ProductManagement />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/orders" element={<Orders />} />

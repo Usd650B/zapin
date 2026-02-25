@@ -198,7 +198,7 @@ export default function StoreView() {
             <button onClick={copyStoreLink} className="flex items-center space-x-1 bg-white border border-amber-300 text-amber-700 px-2 py-1 rounded-lg" style={{ fontSize: '10px' }}>
               <Copy className="w-2.5 h-2.5" /><span>Copy Link</span>
             </button>
-            <button onClick={() => navigate('/manage-products')} className="flex items-center space-x-1 bg-amber-600 text-white px-2 py-1 rounded-lg" style={{ fontSize: '10px' }}>
+            <button onClick={() => navigate(`/store/${storeId}/edit`)} className="flex items-center space-x-1 bg-amber-600 text-white px-2 py-1 rounded-lg" style={{ fontSize: '10px' }}>
               <Edit className="w-2.5 h-2.5" /><span>Edit Store</span>
             </button>
           </div>
