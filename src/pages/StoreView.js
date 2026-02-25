@@ -66,7 +66,6 @@ export default function StoreView() {
     return decoded?.products || [];
   }, [store, products, location.search]);
 
-  const [quantities, setQuantities] = useState({});
   const [addedToCart, setAddedToCart] = useState({});
   const [wishlist, setWishlist] = useState({});
 
@@ -118,14 +117,9 @@ export default function StoreView() {
 
   const handleAddToCart = (product) => {
     if (!product) return;
-    const qty = quantities[product.id] || 1;
-    for (let i = 0; i < qty; i++) addToCart(product);
+    addToCart(product);
     setAddedToCart(prev => ({ ...prev, [product.id]: true }));
     setTimeout(() => setAddedToCart(prev => ({ ...prev, [product.id]: false })), 1500);
-  };
-
-  const updateQuantity = (productId, delta) => {
-    setQuantities(prev => ({ ...prev, [productId]: Math.max(1, (prev[productId] || 1) + delta) }));
   };
 
   const cartItemCount = (cart || []).reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -266,110 +260,131 @@ export default function StoreView() {
             <p className="text-xs font-semibold text-gray-500 mb-2 px-1">
               {storeProducts.length} Products
             </p>
-            {/* 2-column grid */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Modern 2-column grid */}
+            <div className="grid grid-cols-2 gap-3">
               {storeProducts.map(product => {
                 const inStock = product.stock === undefined || product.stock > 0;
                 const lowStock = product.stock !== undefined && product.stock > 0 && product.stock < 5;
-                const qty = quantities[product.id] || 1;
                 const isAdded = addedToCart[product.id];
                 const isWished = wishlist[product.id];
 
                 return (
                   <div
                     key={product.id}
-                    className="bg-white rounded-xl overflow-hidden flex flex-col border border-gray-100"
-                    style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.07)' }}
+                    className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 group"
+                    style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
                   >
-                    {/* Image */}
+                    {/* Product Image */}
                     <div className="relative bg-gray-50" style={{ aspectRatio: '1/1' }}>
                       {product.images && product.images.length > 0 ? (
-                        <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                        <img 
+                          src={product.images[0]} 
+                          alt={product.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Package className="w-8 h-8 text-gray-200" />
                         </div>
                       )}
-                      {/* Wishlist */}
+                      
+                      {/* Modern Badges */}
+                      <div className="absolute top-2 left-2 flex flex-col gap-1">
+                        {!inStock && (
+                          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Out of Stock
+                          </span>
+                        )}
+                        {lowStock && (
+                          <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Only {product.stock} left
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Wishlist Button */}
                       <button
                         onClick={() => setWishlist(p => ({ ...p, [product.id]: !p[product.id] }))}
-                        className="absolute top-1.5 right-1.5 w-6 h-6 bg-white rounded-full shadow-sm flex items-center justify-center"
+                        className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white transition-all"
                       >
-                        <Heart className={`w-3 h-3 ${isWished ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} />
+                        <Heart className={`w-4 h-4 ${isWished ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
                       </button>
-                      {/* Stock badge */}
-                      {!inStock && (
-                        <span className="absolute top-1.5 left-1.5 bg-red-500 text-white rounded px-1" style={{ fontSize: '8px' }}>Out of Stock</span>
-                      )}
-                      {lowStock && (
-                        <span className="absolute top-1.5 left-1.5 bg-orange-500 text-white rounded px-1" style={{ fontSize: '8px' }}>Only {product.stock} left</span>
-                      )}
                     </div>
 
-                    {/* Info */}
-                    <div className="p-2 flex flex-col flex-1">
-                      {/* Name */}
-                      <p className="text-gray-900 font-semibold leading-tight line-clamp-2 mb-1" style={{ fontSize: '11px' }}>
+                    {/* Product Info */}
+                    <div className="p-3">
+                      {/* Product Name */}
+                      <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2 text-sm leading-tight">
                         {product.name}
-                      </p>
+                      </h3>
 
-                      {/* Stars */}
-                      <div className="flex items-center space-x-0.5 mb-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
-                        ))}
-                        <span className="text-gray-400 ml-0.5" style={{ fontSize: '9px' }}>(42)</span>
+                      {/* Rating */}
+                      <div className="flex items-center gap-1 mb-2">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                          ))}
+                        </div>
+                        <span className="text-gray-500 text-xs">(42)</span>
                       </div>
 
                       {/* Price */}
-                      <p className="font-bold mb-1" style={{ color: primaryColor, fontSize: '14px' }}>
-                        {formatPrice(product.price)}
-                      </p>
-
-                      {/* Free shipping */}
-                      <div className="flex items-center space-x-0.5 mb-2">
-                        <Tag className="w-2.5 h-2.5 text-green-600" />
-                        <span className="text-green-600 font-medium" style={{ fontSize: '9px' }}>Free Shipping</span>
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="font-bold text-lg" style={{ color: primaryColor }}>
+                            {formatPrice(product.price)}
+                          </p>
+                          {product.originalPrice && product.originalPrice > product.price && (
+                            <p className="text-gray-400 text-xs line-through">
+                              {formatPrice(product.originalPrice)}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Discount Badge */}
+                        {product.originalPrice && product.originalPrice > product.price && (
+                          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-lg font-medium">
+                            {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                          </span>
+                        )}
                       </div>
 
-                      {/* Actions */}
+                      {/* Free Shipping Badge */}
+                      <div className="flex items-center gap-1 mb-3">
+                        <Tag className="w-3 h-3 text-green-600" />
+                        <span className="text-green-600 text-xs font-medium">Free Shipping</span>
+                      </div>
+
+                      {/* Simple Add to Cart Button */}
                       <div className="mt-auto">
                         {canBuy && inStock ? (
-                          <>
-                            {/* Qty selector */}
-                            <div className="flex items-center border border-gray-200 rounded-lg mb-1.5 overflow-hidden">
-                              <button onClick={() => updateQuantity(product.id, -1)} className="w-7 h-6 flex items-center justify-center hover:bg-gray-50 text-gray-500">
-                                <Minus className="w-2.5 h-2.5" />
-                              </button>
-                              <span className="flex-1 text-center text-gray-900 font-semibold" style={{ fontSize: '11px' }}>{qty}</span>
-                              <button onClick={() => updateQuantity(product.id, 1)} className="w-7 h-6 flex items-center justify-center hover:bg-gray-50 text-gray-500">
-                                <Plus className="w-2.5 h-2.5" />
-                              </button>
-                            </div>
-                            {/* Add to Cart */}
-                            <button
-                              onClick={() => handleAddToCart(product)}
-                              className="w-full py-1.5 rounded-lg text-white font-bold flex items-center justify-center space-x-1 active:scale-95 transition-transform"
-                              style={{
-                                fontSize: '10px',
-                                background: isAdded
-                                  ? 'linear-gradient(135deg,#10b981,#059669)'
-                                  : `linear-gradient(135deg,${primaryColor},${secondaryColor})`,
-                              }}
-                            >
-                              {isAdded ? (
-                                <><CheckCircle className="w-3 h-3" /><span>Added!</span></>
-                              ) : (
-                                <><ShoppingCart className="w-3 h-3" /><span>Add to Cart</span></>
-                              )}
-                            </button>
-                          </>
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            className="w-full py-2.5 rounded-xl text-white font-semibold flex items-center justify-center gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                            style={{
+                              background: isAdded
+                                ? 'linear-gradient(135deg,#10b981,#059669)'
+                                : `linear-gradient(135deg,${primaryColor},${secondaryColor})`,
+                            }}
+                          >
+                            {isAdded ? (
+                              <>
+                                <CheckCircle className="w-4 h-4" />
+                                <span>Added to Cart</span>
+                              </>
+                            ) : (
+                              <>
+                                <ShoppingCart className="w-4 h-4" />
+                                <span>Add to Cart</span>
+                              </>
+                            )}
+                          </button>
                         ) : isStoreOwner ? (
-                          <div className="w-full py-1.5 rounded-lg bg-gray-100 text-gray-400 text-center" style={{ fontSize: '10px' }}>
+                          <div className="w-full py-2.5 rounded-xl bg-gray-100 text-gray-400 text-center text-sm">
                             Your Product
                           </div>
                         ) : (
-                          <div className="w-full py-1.5 rounded-lg bg-gray-100 text-gray-400 text-center" style={{ fontSize: '10px' }}>
+                          <div className="w-full py-2.5 rounded-xl bg-gray-100 text-gray-400 text-center text-sm">
                             Out of Stock
                           </div>
                         )}
