@@ -87,13 +87,20 @@ export function StoreProvider({ children }) {
 
   // Add sample products for testing
   const addSampleProducts = async () => {
+    // Get all stores to match product storeId
+    const storesSnapshot = await getDocs(collection(db, 'stores'));
+    const allStores = storesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Use the first available store ID or create a default one
+    const targetStoreId = allStores.length > 0 ? allStores[0].id : 'default-store';
+    
     const sampleProducts = [
       {
         name: 'Wireless Bluetooth Headphones',
         price: 2999,
         originalPrice: 3999,
         description: 'Premium wireless headphones with noise cancellation',
-        storeId: 'sample-store',
+        storeId: targetStoreId, // Use actual store ID
         stock: 15,
         images: ['https://picsum.photos/400/400?random=1'],
         category: 'Electronics'
@@ -103,7 +110,7 @@ export function StoreProvider({ children }) {
         price: 19999,
         originalPrice: 24999,
         description: 'Advanced fitness and health tracking smartwatch',
-        storeId: 'sample-store',
+        storeId: targetStoreId, // Use actual store ID
         stock: 8,
         images: ['https://picsum.photos/400/400?random=2'],
         category: 'Electronics'
@@ -113,7 +120,7 @@ export function StoreProvider({ children }) {
         price: 8999,
         originalPrice: 12999,
         description: 'UV protection designer sunglasses',
-        storeId: 'sample-store',
+        storeId: targetStoreId, // Use actual store ID
         stock: 25,
         images: ['https://picsum.photos/400/400?random=3'],
         category: 'Fashion'
@@ -122,7 +129,7 @@ export function StoreProvider({ children }) {
         name: 'Portable Power Bank',
         price: 1499,
         description: '20000mAh fast charging power bank',
-        storeId: 'sample-store',
+        storeId: targetStoreId, // Use actual store ID
         stock: 50,
         images: ['https://picsum.photos/400/400?random=4'],
         category: 'Electronics'
