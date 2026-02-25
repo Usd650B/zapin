@@ -11,9 +11,16 @@
   ],
   "routes": [
     {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|json))",
+      "dest": "/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html",
-      "methods": ["GET", "HEAD", "OPTIONS"]
+      "dest": "/index.html"
     }
   ],
   "env": {
