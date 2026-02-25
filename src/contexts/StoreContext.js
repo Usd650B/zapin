@@ -44,19 +44,95 @@ export function StoreProvider({ children }) {
     const unsub = onSnapshot(collection(db, 'stores'), (snapshot) => {
       const storeList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setStores(storeList);
-      setLoading(false);
+      
+      // Add sample store if no stores exist
+      if (storeList.length === 0) {
+        console.log('No stores found, adding sample store...');
+        addSampleStore();
+      }
     });
     return unsub;
   }, []);
+
+  // Add sample store for testing
+  const addSampleStore = async () => {
+    const sampleStore = {
+      name: 'Tech Store',
+      description: 'Your trusted electronics and accessories store',
+      ownerId: 'sample-owner',
+      primaryColor: '#9333ea',
+      secondaryColor: '#a855f7',
+      logo: 'https://picsum.photos/200/200?random=store',
+      banner: 'https://picsum.photos/800/300?random=banner',
+      status: 'active'
+    };
+
+    await addDoc(collection(db, 'stores'), sampleStore);
+  };
 
   // 3. Sync Products from Firestore
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'products'), (snapshot) => {
       const productList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setProducts(productList);
+      
+      // Add sample products if no products exist
+      if (productList.length === 0) {
+        console.log('No products found, adding sample products...');
+        addSampleProducts();
+      }
     });
     return unsub;
   }, []);
+
+  // Add sample products for testing
+  const addSampleProducts = async () => {
+    const sampleProducts = [
+      {
+        name: 'Wireless Bluetooth Headphones',
+        price: 2999,
+        originalPrice: 3999,
+        description: 'Premium wireless headphones with noise cancellation',
+        storeId: 'sample-store',
+        stock: 15,
+        images: ['https://picsum.photos/400/400?random=1'],
+        category: 'Electronics'
+      },
+      {
+        name: 'Smart Watch Pro',
+        price: 19999,
+        originalPrice: 24999,
+        description: 'Advanced fitness and health tracking smartwatch',
+        storeId: 'sample-store',
+        stock: 8,
+        images: ['https://picsum.photos/400/400?random=2'],
+        category: 'Electronics'
+      },
+      {
+        name: 'Designer Sunglasses',
+        price: 8999,
+        originalPrice: 12999,
+        description: 'UV protection designer sunglasses',
+        storeId: 'sample-store',
+        stock: 25,
+        images: ['https://picsum.photos/400/400?random=3'],
+        category: 'Fashion'
+      },
+      {
+        name: 'Portable Power Bank',
+        price: 1499,
+        description: '20000mAh fast charging power bank',
+        storeId: 'sample-store',
+        stock: 50,
+        images: ['https://picsum.photos/400/400?random=4'],
+        category: 'Electronics'
+      }
+    ];
+
+    for (const product of sampleProducts) {
+      await addDoc(collection(db, 'products'), product);
+    }
+  };
 
   // 4. Sync Orders (for buyers and sellers)
   useEffect(() => {

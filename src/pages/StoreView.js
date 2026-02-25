@@ -66,6 +66,11 @@ export default function StoreView() {
     return decoded?.products || [];
   }, [store, products, location.search]);
 
+  // Debug: Log available products and store info
+  console.log('Store ID:', store?.id);
+  console.log('Available products:', products);
+  console.log('Store products:', storeProducts);
+
   const [addedToCart, setAddedToCart] = useState({});
   const [wishlist, setWishlist] = useState({});
 
